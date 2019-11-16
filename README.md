@@ -14,3 +14,8 @@ CORE Features
 3) Reporters - OpentsdbProxyReporter - to dump data to kafka in a format accepted by TSDB
 4) Aggregator - triggers aggregator to aggregate data and return percentiles
 5) Registry - Keeps track of overall metric managers, reporters etc
+
+
+Datasource structure
+1) Metric List
+2) 

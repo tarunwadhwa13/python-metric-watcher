@@ -3,7 +3,20 @@
     decorators start with Py_ to differentiate them from source code's decorators if any
 """
 
+
 class Py_CountCalls:
+
+    def __init__(self, manager):
+        pass
+
+
+class Py_TimeIt:
+
+    def __init__(self, manager):
+        pass
+
+
+class Py_ProfileIt:
 
     def __init__(self, manager):
         pass
