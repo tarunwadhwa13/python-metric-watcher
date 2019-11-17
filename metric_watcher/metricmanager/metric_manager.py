@@ -3,6 +3,9 @@ from metric_watcher.datastore import DBManager
 class MetricManager:
     """ Manages attributes like timers, reporters for a metric """
 
+    def __repr__(self):
+        return f'MetricManager object for {self.metric}'
+
     def __init__(self, metric):
         self.metric = metric
         self.reporters = {}
@@ -21,3 +24,5 @@ class MetricManager:
         # untagged data for a metric should not be allowed
         assert tags, "Untagged data is not allowed"
         assert isinstance(tags, dict), "Tags must be dict"
+
+        return DBManager.push_data(self.datasource_index, {"value": value, "tags": tags})

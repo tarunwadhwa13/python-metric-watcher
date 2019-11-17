@@ -21,16 +21,18 @@ class MetricWatcher(Singleton):
     def __init__(self):
         self._registry = Registry()
         # file path reference is used to ensure only one source if there for initialization
-        DBManager.create_database(CONFIG['Common']['application'])
+        DBManager.create_database(CONFIG.get('Common', {}).get('application', "Test"))
 
     def _initialize_from_config(self):
-        pass
+        # registering metrics
+        for metric in CONFIG['Common']['metrics']:  # this is anyhow compulsory for us to supply metric onfo
+            self.__register_metric(metric, CONFIG.get('Metrics', {}).get(metric, {}))
 
     def __set_reporter(self, reporter_dict):
         pass
 
-    def __register_metric(self, metric_info):
-        pass
+    def __register_metric(self, metric, metric_info):
+        manager = self._registry.add_metric(metric)
 
     def _deregister_reporter(self, reporter):
         pass
