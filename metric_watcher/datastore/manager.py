@@ -7,8 +7,9 @@ import inspect
 import os
 import sqlite3
 import hashlib
+import json
 
-from schema import Schema, And
+from schema import Schema, And, Or
 from metric_watcher.datastore import queries
 from metric_watcher.config_store import CONFIG
 
@@ -17,7 +18,7 @@ class DBManager:
 
     DB_PATH = None
     INPUT_SCHEMA = Schema({
-        "index": str,
+        "value": Or(int, float),
         "tags": And(dict, len)
     })
     DB_CONN = None
@@ -25,7 +26,7 @@ class DBManager:
     @classmethod
     def _get_connection(cls):
         if not DBManager.DB_CONN:
-            DBManager.DB_CONN = sqlite3.connect(DBManager.DB_PATH)
+            DBManager.DB_CONN = sqlite3.connect(DBManager.DB_PATH, isolation_level=None)
         return DBManager.DB_CONN
 
     @classmethod
@@ -51,7 +52,7 @@ class DBManager:
         metric = metric.encode('utf-8')
         metric_hash = hashlib.sha224(metric).hexdigest()
         connection = DBManager._get_connection()
-        connection.execute(queries.CREATE_METRIC_SINK.format(
+        connection.execute(queries.CREATE_METRIC_DATA_TABLE.format(
             table_name=str(metric_hash)))
         connection.execute(queries.CREATE_AGGREGATED_DATA_TABLE.format(
             table_name=f'{metric_hash}-aggregated'))
@@ -59,12 +60,16 @@ class DBManager:
 
     @classmethod
     def validate_data_format(cls, data):
-        pass
+        return Schema(DBManager.INPUT_SCHEMA).validate(data)
 
     @classmethod
     def push_data(cls, index, data):
-        cls.validate_data_format(data)
-        pass
+        data = cls.validate_data_format(data)
+        query = queries.PUSH_METRIC_DATA.format(table_name=index)
+
+        connection = DBManager._get_connection()
+        db_output = connection.execute(query, (data['value'], json.dumps(data['tags'])))
+        return {"data" : data, "index": index}
 
     @classmethod
     def get_data(cls, index, start_time, end_time):
@@ -72,6 +77,5 @@ class DBManager:
         query = queries.GET_METRIC_DATA_FOR_INTERVAL.format(
             table_name=index
         )
-        print(query)
         db_output = connection.execute(query, (start_time, end_time))
         return db_output.fetchall()
